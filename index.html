@@ -217,6 +217,33 @@ input[type=number] { font-family: var(--fm); }
 .hc-sum-lbl { font-size: .6rem; font-family: var(--fm); color: var(--mu); text-transform: uppercase; letter-spacing: 1.5px; }
 .hc-sum-val { font-size: 1.1rem; font-family: var(--fm); font-weight: 700; color: var(--a2); }
 
+/* PAGAMENTO FUNCIONÁRIOS */
+.card-pf { border-top: 1px solid var(--bd); padding: .75rem 1.25rem; background: rgba(16,185,129,.03); cursor: default; }
+.card-pf:hover { background: rgba(16,185,129,.06); }
+.pf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.pf-label { font-size: .6rem; font-family: var(--fm); color: var(--a2); text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: .4rem; }
+.pf-add-btn { background: rgba(16,185,129,.12); border: 1px solid var(--a2); color: var(--a2); border-radius: 5px; padding: .2rem .55rem; font-size: .65rem; font-family: var(--fm); cursor: pointer; transition: all .2s; }
+.pf-add-btn:hover { background: rgba(16,185,129,.25); }
+.pf-totals { display: flex; gap: 1rem; flex-wrap: wrap; }
+.pf-total { display: flex; flex-direction: column; gap: .2rem; }
+.pf-total-lbl { font-size: .55rem; font-family: var(--fm); color: var(--mu); text-transform: uppercase; letter-spacing: 1px; }
+.pf-total-val { font-size: .8rem; font-family: var(--fm); font-weight: 700; color: var(--a2); }
+.pf-empty { font-size: .7rem; font-family: var(--fm); color: var(--mu); font-style: italic; }
+.pfbox { background: var(--s); border: 1px solid var(--bd); border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.pf-summary { background: var(--s2); border: 1px solid rgba(16,185,129,.2); border-radius: 10px; padding: 1rem 1.25rem; display: flex; gap: 2rem; margin-bottom: 1.5rem; }
+.pf-sum-item { display: flex; flex-direction: column; gap: .3rem; }
+.pf-sum-lbl { font-size: .6rem; font-family: var(--fm); color: var(--mu); text-transform: uppercase; letter-spacing: 1.5px; }
+.pf-sum-val { font-size: 1.1rem; font-family: var(--fm); font-weight: 700; color: var(--a2); }
+.pf-form { background: var(--s2); border: 1px solid var(--bd); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+.payment-row { background: var(--s2); border: 1px solid var(--bd); border-radius: 8px; padding: .75rem 1rem; }
+.pay-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.pay-name { font-size: .88rem; font-weight: 700; color: var(--tx); }
+.pay-func { font-size: .7rem; font-family: var(--fm); color: var(--a2); margin-top: .1rem; }
+.pay-date { font-size: .65rem; font-family: var(--fm); color: var(--mu); margin-top: .15rem; }
+.pay-value { font-family: var(--fm); font-weight: 700; font-size: .95rem; color: var(--a2); white-space: nowrap; }
+.pay-del { background: transparent; border: 1px solid var(--bd); color: var(--mu); width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+.pay-del:hover { background: var(--dn); border-color: var(--dn); color: #fff; }
+
 /* TOAST */
 .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--s2); border: 1px solid var(--a2); border-radius: 8px; padding: .75rem 1.25rem; font-size: .8rem; font-family: var(--fm); color: var(--a2); z-index: 9999; transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events: none; }
 .toast.show { transform: translateY(0); opacity: 1; }
@@ -241,7 +268,9 @@ input[type=number] { font-family: var(--fm); }
     <div class="hstats">
       <div class="pill g"><span>Concluídas</span><strong id="H-done">0</strong></div>
       <div class="pill y"><span>Em andamento</span><strong id="H-prog">0</strong></div>
-      <div class="pill b"><span>Custo Total</span><strong id="H-cost">R$ 0,00</strong></div>
+      <div class="pill b"><span>Custo da Obra</span><strong id="H-cost-obra">R$ 0,00</strong></div>
+      <div class="pill" style="border-color:rgba(16,185,129,.3);"><span>Custo Funcionários</span><strong id="H-cost-func" style="color:var(--a2);">R$ 0,00</strong></div>
+      <div class="pill" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.05);"><span>Total</span><strong id="H-cost-total" style="color:var(--a);">R$ 0,00</strong></div>
     </div>
     <div class="hbtns">
         <div id="CLOCK" style="font-family:var(--fm);font-size:.65rem;color:var(--mu);padding:.4rem .8rem;background:var(--s);border:1px solid var(--bd);border-radius:6px;white-space:nowrap;"></div>
@@ -332,18 +361,24 @@ input[type=number] { font-family: var(--fm); }
       <div class="sec-t">Custos</div>
       <div class="frow">
         <div class="fg">
-          <div class="fl">💰 Custo de Materiais (R$)</div>
-          <input type="number" id="F-cmat" placeholder="0,00" min="0" step="0.01">
+          <div class="fl">💰 Custo de Materiais</div>
+          <div id="F-cmat-display" style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:.65rem .9rem;font-family:var(--fm);font-size:.9rem;color:var(--a2);font-weight:700;">R$ 0,00</div>
+          <div style="font-size:.6rem;font-family:var(--fm);color:var(--mu);margin-top:.3rem;">📦 Soma automática do Histórico de Compras</div>
         </div>
         <div class="fg">
-          <div class="fl">👷 Custo de Mão de Obra (R$)</div>
-          <input type="number" id="F-cmao" placeholder="0,00" min="0" step="0.01">
+          <div class="fl">👷 Custo de Mão de Obra</div>
+          <div id="F-cmao-display" style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:.65rem .9rem;font-family:var(--fm);font-size:.9rem;color:var(--a2);font-weight:700;">R$ 0,00</div>
+          <div style="font-size:.6rem;font-family:var(--fm);color:var(--mu);margin-top:.3rem;">👷 Soma automática do Pagamento de Funcionários</div>
         </div>
       </div>
       <div class="fg">
-        <div class="fl">📝 Observações de custo</div>
-        <input type="text" id="F-cobs" placeholder="Ex: Valor negociado, inclui frete...">
+        <div class="fl">💎 Total desta Etapa</div>
+        <div id="F-ctotal-display" style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.75rem .9rem;font-family:var(--fm);font-size:1.1rem;color:var(--a);font-weight:700;text-align:center;">R$ 0,00</div>
       </div>
+      <!-- Hidden inputs mantidos para compatibilidade com save -->
+      <input type="hidden" id="F-cmat">
+      <input type="hidden" id="F-cmao">
+      <input type="hidden" id="F-cobs">
       <hr class="divider">
       <div class="sec-t">Tempo de Execução</div>
       <div class="frow">
@@ -487,6 +522,39 @@ input[type=number] { font-family: var(--fm); }
   </div>
 </div>
 
+<!-- PAGAMENTO FUNCIONÁRIOS MODAL -->
+<div class="backdrop" id="BD-pf">
+  <div class="pfbox">
+    <div class="mhdr" style="position:relative;">
+      <div>
+        <div class="m-title">PAGAMENTO DE FUNCIONÁRIOS</div>
+        <div class="m-sub" id="PF-sub">ETAPA 01</div>
+      </div>
+      <button class="xbtn" id="PF-close">×</button>
+    </div>
+    <div class="mbody">
+      <div class="pf-summary">
+        <div class="pf-sum-item"><div class="pf-sum-lbl">💰 Total Pago</div><div class="pf-sum-val" id="PF-total-val">R$ 0,00</div></div>
+        <div class="pf-sum-item"><div class="pf-sum-lbl">👷 Funcionários</div><div class="pf-sum-val" id="PF-total-count">0</div></div>
+      </div>
+      <div class="pf-form">
+        <div class="sec-t" style="margin-bottom:.9rem;">Novo pagamento</div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">👷 Nome</div><input type="text" id="PF-nome" placeholder="Nome do funcionário"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🔧 Função</div><input type="text" id="PF-func" placeholder="Ex: Pedreiro, Servente..."></div>
+        </div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📅 Data do Pagamento</div><input type="date" id="PF-data"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">💰 Valor Pago (R$)</div><input type="number" id="PF-valor" placeholder="0,00" min="0" step="0.01"></div>
+        </div>
+        <button class="btn btn-p" style="width:100%;background:var(--a2);color:#000;" id="PF-add">➕ Registrar Pagamento</button>
+      </div>
+      <div class="sec-t">Pagamentos registrados</div>
+      <div id="PF-list" style="display:flex;flex-direction:column;gap:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="TOAST"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -511,6 +579,8 @@ var SD  = {};
 var FNS = [];
 var OI  = {};
 var HC  = {};
+var PF  = {};
+var SAVING = false;
 
 // ---- RELÓGIO EM TEMPO REAL ----
 function startClock() {
@@ -532,7 +602,9 @@ async function saveSD() {
   }
 }
 async function saveSingleSD(id) {
+  SAVING = true;
   await sb.from('obra_stages').upsert({id: parseInt(id), data: SD[id]});
+  SAVING = false;
 }
 async function saveFNS() {
   // delete all then re-insert
@@ -556,14 +628,19 @@ async function saveHC() {
 
 // ---- LOAD (Supabase) ----
 async function loadAll() {
-  var [stages, hc, fns, info] = await Promise.all([
+  var [stages, hc, fns, info, pf] = await Promise.all([
     sb.from('obra_stages').select('*'),
     sb.from('obra_hc').select('*'),
     sb.from('obra_fns').select('*'),
-    sb.from('obra_info').select('*')
+    sb.from('obra_info').select('*'),
+    sb.from('obra_pf').select('*').then(function(r){ return r; }).catch(function(){ return {data:[]}; })
   ]);
   SD = {};
-  (stages.data||[]).forEach(function(r){ SD[r.id] = r.data; });
+  PF = {};
+  (stages.data||[]).forEach(function(r){
+    SD[r.id] = r.data;
+    if (r.data && r.data._pf) PF[r.id] = r.data._pf;
+  });
   HC = {};
   (hc.data||[]).forEach(function(r){ if(!HC[r.stage_id]) HC[r.stage_id]=[]; HC[r.stage_id].push(r.data); });
   FNS = (fns.data||[]).map(function(r){ return r.data; });
@@ -578,8 +655,11 @@ function setupRealtime() {
     .on('postgres_changes', {event:'*', schema:'public', table:'obra_stages'}, function(payload) {
       if (payload.eventType === 'DELETE') {
         delete SD[payload.old.id];
+        delete PF[payload.old.id];
       } else {
         SD[payload.new.id] = payload.new.data;
+        if (payload.new.data && payload.new.data._pf) PF[payload.new.id] = payload.new.data._pf;
+        else delete PF[payload.new.id];
       }
       renderGrid();
     })
@@ -605,6 +685,20 @@ function setupRealtime() {
         if (idx >= 0) FNS[idx] = payload.new.data;
         else FNS.push(payload.new.data);
       }
+    })
+    .on('postgres_changes', {event:'*', schema:'public', table:'obra_pf'}, function(payload) {
+      if (payload.eventType === 'DELETE') {
+        var sid = payload.old.stage_id;
+        PF[sid] = (PF[sid]||[]).filter(function(p){ return p.id != payload.old.id; });
+      } else {
+        var sid = payload.new.stage_id;
+        if (!PF[sid]) PF[sid] = [];
+        var idx = PF[sid].findIndex(function(p){ return p.id == payload.new.id; });
+        if (idx >= 0) PF[sid][idx] = payload.new.data;
+        else PF[sid].push(payload.new.data);
+      }
+      renderGrid();
+      if (PF_SID) renderPFList();
     })
     .on('postgres_changes', {event:'*', schema:'public', table:'obra_info'}, function(payload) {
       if (payload.new) {
@@ -654,7 +748,7 @@ function closeBD(id) { document.getElementById(id).classList.remove('open'); doc
 function renderGrid() {
   var grid = document.getElementById('GRID');
   grid.innerHTML = '';
-  var done=0, prog=0, cost=0;
+  var done=0, prog=0, costObra=0, costFunc=0;
 
   for (var i=0; i<STAGES.length; i++) {
     var s = STAGES[i];
@@ -662,7 +756,13 @@ function renderGrid() {
     var st = d.status || 'pendente';
     if (st==='concluido')   done++;
     if (st==='em-andamento') prog++;
-    cost += (parseFloat(d.cmat)||0) + (parseFloat(d.cmao)||0);
+    costObra += (parseFloat(d.cmat)||0) + (parseFloat(d.cmao)||0);
+    // Soma histórico de compras no custo da obra
+    var hcList = HC[s.id] || [];
+    hcList.forEach(function(p){ costObra += parseFloat(p.valor)||0; });
+    // Soma pagamento de funcionários separado
+    var pfList = PF[s.id] || [];
+    pfList.forEach(function(p){ costFunc += parseFloat(p.valor)||0; });
 
     var stlbl = st==='concluido' ? 'Concluído' : st==='em-andamento' ? 'Em andamento' : 'Pendente';
     var cls   = st==='concluido' ? 'done' : st==='em-andamento' ? 'prog' : '';
@@ -757,6 +857,32 @@ function renderGrid() {
     })(s.id);
 
     el.appendChild(histSection);
+
+    // PF section
+    var pfTotals = (function(sid) {
+      var list = PF[sid] || [];
+      var total = 0;
+      list.forEach(function(p){ total += parseFloat(p.valor)||0; });
+      return { total: total, count: list.length };
+    })(s.id);
+    var pfSection = document.createElement('div');
+    pfSection.className = 'card-pf';
+    pfSection.innerHTML =
+      '<div class="pf-header">' +
+        '<div class="pf-label">👷 Pagamento Funcionários</div>' +
+        '<button class="pf-add-btn" data-sid="'+s.id+'">+ Registrar</button>' +
+      '</div>' +
+      (pfTotals.count === 0
+        ? '<div class="pf-empty">Nenhum pagamento registrado</div>'
+        : '<div class="pf-totals">' +
+            '<div class="pf-total"><div class="pf-total-lbl">💰 Total pago</div><div class="pf-total-val">'+fmtMoney(pfTotals.total)+'</div></div>' +
+            '<div class="pf-total"><div class="pf-total-lbl">👷 Funcionários</div><div class="pf-total-val">'+pfTotals.count+'</div></div>' +
+          '</div>');
+    (function(sid){
+      pfSection.querySelector('.pf-add-btn').onclick = function(e) { e.stopPropagation(); openPF(sid); };
+      pfSection.onclick = function(e) { e.stopPropagation(); openPF(sid); };
+    })(s.id);
+    el.appendChild(pfSection);
     (function(sid){ el.querySelector('.card-h, .card-b, .card-f').onclick = null;
       el.onclick = function(e){ if(!e.target.closest('.card-hist')) openChooser(sid); }; })(s.id);
     grid.appendChild(el);
@@ -764,7 +890,10 @@ function renderGrid() {
 
   document.getElementById('H-done').textContent = done;
   document.getElementById('H-prog').textContent = prog;
-  document.getElementById('H-cost').textContent = 'R$ '+cost.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var fmt = function(v){ return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  document.getElementById('H-cost-obra').textContent  = fmt(costObra);
+  document.getElementById('H-cost-func').textContent  = fmt(costFunc);
+  document.getElementById('H-cost-total').textContent = fmt(costObra + costFunc);
   var p = Math.round(done/STAGES.length*100);
   document.getElementById('P-pct').textContent  = p+'%';
   document.getElementById('P-fill').style.width = p+'%';
@@ -818,6 +947,16 @@ function openStage(id, view) {
 
   document.getElementById('FT-edit').style.display = view ? 'none' : 'flex';
   document.getElementById('FT-view').style.display = view ? 'flex'  : 'none';
+
+  // Custo real: HC = materiais, PF = mão de obra
+  var hcTotal = 0;
+  (HC[id]||[]).forEach(function(p){ hcTotal += parseFloat(p.valor)||0; });
+  var pfTotal = 0;
+  (PF[id]||[]).forEach(function(p){ pfTotal += parseFloat(p.valor)||0; });
+  document.getElementById('F-cmat-display').textContent  = fmtMoney(hcTotal);
+  document.getElementById('F-cmao-display').textContent  = fmtMoney(pfTotal);
+  document.getElementById('F-ctotal-display').textContent = fmtMoney(hcTotal + pfTotal);
+
   renderMatList();
   openBD('BD-st');
 }
@@ -1068,7 +1207,9 @@ document.getElementById('HC-add').onclick = async function() {
   };
   if (!HC[HC_SID]) HC[HC_SID] = [];
   HC[HC_SID].push(item);
+  SAVING = true;
   await sb.from('obra_hc').insert({id: item.id, stage_id: HC_SID, data: item});
+  SAVING = false;
   document.getElementById('HC-nome').value  = '';
   document.getElementById('HC-marca').value = '';
   document.getElementById('HC-forn').value  = '';
@@ -1087,15 +1228,106 @@ async function delHC(id) {
   if (!HC_SID) return;
   if (!confirm('Remover esta compra?')) return;
   HC[HC_SID] = (HC[HC_SID]||[]).filter(function(p){ return p.id!==id; });
+  SAVING = true;
   await sb.from('obra_hc').delete().eq('id', id);
+  SAVING = false;
   renderHCList();
+  renderGrid();
+}
+
+// ---- PAGAMENTO FUNCIONÁRIOS ----
+var PF_SID = null;
+
+function openPF(id) {
+  PF_SID = id;
+  var s = STAGES.filter(function(x){return x.id===id;})[0];
+  document.getElementById('PF-sub').textContent = 'ETAPA '+String(id).padStart(2,'0')+' — '+s.name.toUpperCase();
+  document.getElementById('PF-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('PF-nome').value  = '';
+  document.getElementById('PF-func').value  = '';
+  document.getElementById('PF-valor').value = '';
+  renderPFList();
+  openBD('BD-pf');
+}
+
+function closePF() { closeBD('BD-pf'); PF_SID = null; }
+
+function renderPFList() {
+  if (!PF_SID) return;
+  var list = PF[PF_SID] || [];
+  var total = 0;
+  list.forEach(function(p){ total += parseFloat(p.valor)||0; });
+  document.getElementById('PF-total-val').textContent   = fmtMoney(total);
+  document.getElementById('PF-total-count').textContent = list.length;
+  var el = document.getElementById('PF-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="color:var(--mu);font-family:var(--fm);font-size:.8rem;text-align:center;padding:1.5rem;">Nenhum pagamento registrado ainda.</div>';
+    return;
+  }
+  var sorted = list.slice().sort(function(a,b){ return (b.data||'').localeCompare(a.data||''); });
+  el.innerHTML = sorted.map(function(p) {
+    var dateStr = p.data ? new Date(p.data+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    return '<div class="payment-row">' +
+      '<div class="pay-top">' +
+        '<div>' +
+          '<div class="pay-name">👷 '+(p.nome||'Funcionário')+'</div>' +
+          (p.func ? '<div class="pay-func">🔧 '+p.func+'</div>' : '') +
+          '<div class="pay-date">📅 '+dateStr+'</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:.5rem;">' +
+          '<div class="pay-value">'+fmtMoney(parseFloat(p.valor)||0)+'</div>' +
+          '<button class="pay-del" onclick="delPF('+p.id+')">×</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+document.getElementById('PF-close').onclick = closePF;
+document.getElementById('BD-pf').onclick = function(e){ if(e.target===this) closePF(); };
+
+document.getElementById('PF-add').onclick = async function() {
+  if (!PF_SID) return;
+  var item = {
+    id:    Date.now(),
+    data:  document.getElementById('PF-data').value,
+    nome:  document.getElementById('PF-nome').value.trim(),
+    func:  document.getElementById('PF-func').value.trim(),
+    valor: parseFloat(document.getElementById('PF-valor').value) || 0
+  };
+  if (!PF[PF_SID]) PF[PF_SID] = [];
+  PF[PF_SID].push(item);
+  // Salva junto com os dados da etapa em obra_stages
+  if (!SD[PF_SID]) SD[PF_SID] = getSD(PF_SID);
+  SD[PF_SID]._pf = PF[PF_SID];
+  SAVING = true;
+  await sb.from('obra_stages').upsert({id: parseInt(PF_SID), data: SD[PF_SID]});
+  SAVING = false;
+  document.getElementById('PF-nome').value  = '';
+  document.getElementById('PF-func').value  = '';
+  document.getElementById('PF-valor').value = '';
+  renderPFList();
+  renderGrid();
+  toast('Pagamento registrado!');
+};
+
+async function delPF(id) {
+  if (!PF_SID) return;
+  if (!confirm('Remover este pagamento?')) return;
+  PF[PF_SID] = (PF[PF_SID]||[]).filter(function(p){ return p.id!==id; });
+  if (!SD[PF_SID]) SD[PF_SID] = getSD(PF_SID);
+  SD[PF_SID]._pf = PF[PF_SID];
+  SAVING = true;
+  await sb.from('obra_stages').upsert({id: parseInt(PF_SID), data: SD[PF_SID]});
+  SAVING = false;
+  renderPFList();
   renderGrid();
 }
 
 // ESC
 document.addEventListener('keydown', function(e){
   if (e.key!=='Escape') return;
-  ['BD-ch','BD-st','BD-sp','BD-mgr','BD-obra','BD-hc'].forEach(closeBD);
+  ['BD-ch','BD-st','BD-sp','BD-mgr','BD-obra','BD-hc','BD-pf'].forEach(closeBD);
   document.body.style.overflow='';
 });
 
@@ -1106,27 +1338,34 @@ loadAll();
 
 // Polling fallback — sincroniza a cada 2 segundos
 setInterval(async function() {
-  var [stages, hc, fns, info] = await Promise.all([
+  if (SAVING) return;
+  var [stages, hc, fns, info, pf] = await Promise.all([
     sb.from('obra_stages').select('*'),
     sb.from('obra_hc').select('*'),
     sb.from('obra_fns').select('*'),
-    sb.from('obra_info').select('*')
+    sb.from('obra_info').select('*'),
+    sb.from('obra_pf').select('*').then(function(r){ return r; }).catch(function(){ return {data:[]}; })
   ]);
   var newSD = {};
-  (stages.data||[]).forEach(function(r){ newSD[r.id] = r.data; });
+  var newPF = {};
+  (stages.data||[]).forEach(function(r){
+    newSD[r.id] = r.data;
+    if (r.data && r.data._pf) newPF[r.id] = r.data._pf;
+  });
   var newHC = {};
   (hc.data||[]).forEach(function(r){ if(!newHC[r.stage_id]) newHC[r.stage_id]=[]; newHC[r.stage_id].push(r.data); });
   var newFNS = (fns.data||[]).map(function(r){ return r.data; });
   var newOI  = (info.data && info.data[0]) ? info.data[0].data : {};
-  // Only re-render if data changed
   if (JSON.stringify(newSD) !== JSON.stringify(SD) ||
       JSON.stringify(newHC) !== JSON.stringify(HC) ||
       JSON.stringify(newFNS) !== JSON.stringify(FNS) ||
-      JSON.stringify(newOI) !== JSON.stringify(OI)) {
-    SD = newSD; HC = newHC; FNS = newFNS; OI = newOI;
+      JSON.stringify(newOI) !== JSON.stringify(OI) ||
+      JSON.stringify(newPF) !== JSON.stringify(PF)) {
+    SD = newSD; HC = newHC; FNS = newFNS; OI = newOI; PF = newPF;
     renderGrid();
     if (OI.nome) document.getElementById('H-obra').textContent = OI.nome;
     if (HC_SID) renderHCList();
+    if (PF_SID) renderPFList();
   }
 }, 2000);
 </script>
