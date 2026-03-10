@@ -251,7 +251,57 @@ input[type=number] { font-family: var(--fm); }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--a); }
-@media (max-width: 768px) { .hstats { display: none; } .grid { grid-template-columns: 1fr; } .frow { grid-template-columns: 1fr; } main { padding: 1rem; } }
+@media (max-width: 768px) {
+  /* HEADER */
+  header { padding: 0 1rem; }
+  .hinner { flex-wrap: wrap; padding: .75rem 0; gap: .75rem; }
+  .logo-t { font-size: .85rem; }
+  .logo-s { display: none; }
+  .logo-ico { width: 32px; height: 32px; font-size: 1rem; }
+  .hstats { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; width: 100%; order: 3; }
+  .pill { border-radius: 8px; padding: .4rem .75rem; font-size: .75rem; justify-content: space-between; }
+  .pill span { font-size: .6rem; }
+  .pill strong { font-size: .8rem; }
+  .hbtns { gap: .4rem; }
+  .hbtn { padding: .35rem .65rem; font-size: .7rem; }
+  #CLOCK { font-size: .58rem !important; padding: .3rem .5rem !important; display: none; }
+
+  /* MAIN */
+  main { padding: .75rem; }
+  .psec { flex-direction: column; align-items: flex-start; gap: .75rem; padding: 1rem; }
+  .plbl { font-size: 2rem; }
+  .ptrack { width: 100%; }
+  .pbadges { flex-wrap: wrap; gap: .5rem; }
+
+  /* GRID */
+  .grid { grid-template-columns: 1fr; gap: .75rem; }
+
+  /* CARD */
+  .card-b { grid-template-columns: 1fr 1fr; }
+  .card-tempo { flex-direction: column; align-items: flex-start; gap: .3rem; }
+  .tempo-dates { text-align: left; }
+
+  /* MODAIS */
+  .mbox { max-width: 100% !important; max-height: 95vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .hcbox { max-width: 100% !important; max-height: 95vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .pfbox { max-width: 100% !important; max-height: 95vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .chbox { max-width: 100% !important; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .spbox { max-width: 100% !important; max-height: 95vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .mgrbox { max-width: 100% !important; max-height: 95vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
+  .backdrop { align-items: flex-end; padding: 0; }
+  .frow { grid-template-columns: 1fr; }
+  .mbody { padding: 1rem; }
+  .mhdr { padding: 1rem; }
+  .mfooter { padding: 1rem; }
+
+  /* HC e PF summary */
+  .hc-summary { flex-wrap: wrap; gap: .75rem; }
+  .pf-summary { flex-wrap: wrap; gap: .75rem; }
+
+  /* HIST e PF no card */
+  .hist-totals { flex-wrap: wrap; gap: .5rem; }
+  .pf-totals { flex-wrap: wrap; gap: .5rem; }
+}
 </style>
 </head>
 <body>
