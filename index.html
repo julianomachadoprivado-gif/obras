@@ -1103,6 +1103,32 @@ document.addEventListener('keydown', function(e){
 startClock();
 setupRealtime();
 loadAll();
+
+// Polling fallback — sincroniza a cada 2 segundos
+setInterval(async function() {
+  var [stages, hc, fns, info] = await Promise.all([
+    sb.from('obra_stages').select('*'),
+    sb.from('obra_hc').select('*'),
+    sb.from('obra_fns').select('*'),
+    sb.from('obra_info').select('*')
+  ]);
+  var newSD = {};
+  (stages.data||[]).forEach(function(r){ newSD[r.id] = r.data; });
+  var newHC = {};
+  (hc.data||[]).forEach(function(r){ if(!newHC[r.stage_id]) newHC[r.stage_id]=[]; newHC[r.stage_id].push(r.data); });
+  var newFNS = (fns.data||[]).map(function(r){ return r.data; });
+  var newOI  = (info.data && info.data[0]) ? info.data[0].data : {};
+  // Only re-render if data changed
+  if (JSON.stringify(newSD) !== JSON.stringify(SD) ||
+      JSON.stringify(newHC) !== JSON.stringify(HC) ||
+      JSON.stringify(newFNS) !== JSON.stringify(FNS) ||
+      JSON.stringify(newOI) !== JSON.stringify(OI)) {
+    SD = newSD; HC = newHC; FNS = newFNS; OI = newOI;
+    renderGrid();
+    if (OI.nome) document.getElementById('H-obra').textContent = OI.nome;
+    if (HC_SID) renderHCList();
+  }
+}, 2000);
 </script>
 </body>
 </html>
