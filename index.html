@@ -210,6 +210,8 @@ input[type=number] { font-family: var(--fm); }
 .pr-supplier { font-size: .75rem; font-weight: 600; }
 .pr-items { font-size: .72rem; color: var(--mu); line-height: 1.5; }
 .pr-qty { display: inline-block; background: rgba(59,130,246,.1); border: 1px solid var(--a3); color: var(--a3); border-radius: 4px; padding: .1rem .4rem; font-size: .6rem; font-family: var(--fm); margin-right: .4rem; }
+.pr-edit { background: transparent; border: 1px solid var(--bd); color: var(--mu); width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-size: .75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+.pr-edit:hover { background: rgba(59,130,246,.15); border-color: var(--a3); color: var(--a3); }
 .pr-del { background: transparent; border: 1px solid var(--bd); color: var(--mu); width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-size: .8rem; flex-shrink: 0; transition: all .2s; }
 .pr-del:hover { background: var(--dn); border-color: var(--dn); color: #fff; }
 .hc-summary { background: rgba(16,185,129,.05); border: 1px solid rgba(16,185,129,.2); border-radius: 10px; padding: 1rem 1.25rem; display: flex; gap: 2rem; margin-bottom: 1rem; }
@@ -471,7 +473,6 @@ input[type=number] { font-family: var(--fm); }
       <div class="hc-summary">
         <div class="hc-sum-item"><div class="hc-sum-lbl">💰 Total Gasto</div><div class="hc-sum-val" id="HC-total-val">R$ 0,00</div></div>
         <div class="hc-sum-item"><div class="hc-sum-lbl">🛒 Compras</div><div class="hc-sum-val" id="HC-total-count">0</div></div>
-        <div class="hc-sum-item"><div class="hc-sum-lbl">📦 Total de Itens</div><div class="hc-sum-val" id="HC-total-qty">0</div></div>
       </div>
       <div class="hc-form">
         <div class="sec-t" style="margin-bottom:.9rem;">Nova compra</div>
@@ -499,10 +500,96 @@ input[type=number] { font-family: var(--fm); }
           </div>
         </div>
         <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📝 Descrição / Observação</div><textarea id="HC-itens" placeholder="Detalhes adicionais, especificações técnicas..." style="min-height:64px;"></textarea></div>
+        <!-- FOTO NOVA COMPRA -->
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div id="HC-foto-preview" style="display:none;margin-bottom:.5rem;position:relative;">
+            <img id="HC-foto-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--bd);max-height:180px;object-fit:cover;">
+            <button onclick="removeHCFoto()" style="position:absolute;top:.4rem;right:.4rem;background:var(--dn);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.9rem;line-height:1;">×</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.75rem;background:var(--s2);border:1px dashed var(--bd);border-radius:8px;padding:.75rem 1rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--a3)'" onmouseout="this.style.borderColor='var(--bd)'">
+            <span style="font-size:1.4rem;">📷</span>
+            <div>
+              <div style="font-size:.8rem;color:var(--tx);font-weight:600;" id="HC-foto-lbl">Tirar foto ou importar imagem</div>
+              <div style="font-size:.65rem;color:var(--mu);font-family:var(--fm);margin-top:2px;">Foto do pedido, nota fiscal, comprovante...</div>
+            </div>
+            <input type="file" id="HC-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewHCFoto(this)">
+          </label>
+        </div>
         <button class="btn btn-p" style="width:100%;" id="HC-add">➕ Registrar Compra</button>
       </div>
       <div class="sec-t">Compras registradas</div>
       <div id="HC-list" style="display:flex;flex-direction:column;gap:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR COMPRA MODAL -->
+<div class="backdrop" id="BD-hc-edit">
+  <div class="hcbox">
+    <div class="mhdr" style="position:relative;">
+      <div>
+        <div class="m-title">EDITAR COMPRA</div>
+        <div class="m-sub" id="HCE-sub"></div>
+      </div>
+      <button class="xbtn" id="HCE-close">×</button>
+    </div>
+    <div class="mbody">
+      <div class="hc-form">
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📅 Data da Compra</div><input type="date" id="HCE-data"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🏭 Fornecedor</div><input type="text" id="HCE-forn" placeholder="Nome do fornecedor"></div>
+        </div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🏷️ Nome do Item</div><input type="text" id="HCE-nome" placeholder="Ex: Cimento, Vergalhão..."></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🔖 Marca do Item</div><input type="text" id="HCE-marca" placeholder="Ex: Votorantim, Gerdau..."></div>
+        </div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📦 Qtd. de Itens</div><input type="number" id="HCE-qty" placeholder="Ex: 10" min="0" step="1" oninput="calcHCEditTotal()"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">💲 Valor Unitário (R$)</div><input type="number" id="HCE-vunit" placeholder="0,00" min="0" step="0.01" oninput="calcHCEditTotal()"></div>
+        </div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🏷️ Desconto (R$)</div><input type="number" id="HCE-desc" placeholder="0,00" min="0" step="0.01" oninput="calcHCEditTotal()"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🚚 Valor do Frete (R$)</div><input type="number" id="HCE-frete" placeholder="0,00" min="0" step="0.01" oninput="calcHCEditTotal()"></div>
+        </div>
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div class="fl">💰 Total da Compra (R$)</div>
+          <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:.65rem .9rem;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.7rem;font-family:var(--fm);color:var(--mu);">Qtd × Unitário − Desconto + Frete</span>
+            <span id="HCE-total-calc" style="font-family:var(--fm);font-weight:700;font-size:1rem;color:var(--a2);">R$ 0,00</span>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📝 Descrição / Observação</div><textarea id="HCE-itens" placeholder="Detalhes adicionais..." style="min-height:64px;"></textarea></div>
+        <!-- FOTO -->
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div class="fl">📷 Foto do Pedido / Nota Fiscal</div>
+          <div id="HCE-foto-preview" style="display:none;margin-bottom:.5rem;position:relative;">
+            <img id="HCE-foto-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--bd);max-height:200px;object-fit:cover;">
+            <button onclick="removeHCEFoto()" style="position:absolute;top:.4rem;right:.4rem;background:var(--dn);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;">×</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.5rem;background:var(--s2);border:1px dashed var(--bd);border-radius:8px;padding:.65rem .9rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--a3)'" onmouseout="this.style.borderColor='var(--bd)'">
+            <span style="font-size:1.2rem;">📷</span>
+            <span style="font-size:.8rem;color:var(--mu);font-family:var(--fm);" id="HCE-foto-lbl">Clique para adicionar foto ou tirar uma</span>
+            <input type="file" id="HCE-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewHCEFoto(this)">
+          </label>
+        </div>
+        <button class="btn btn-p" style="width:100%;" id="HCE-save">💾 Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISUALIZAR IMAGEM MODAL -->
+<div class="backdrop" id="BD-img-view">
+  <div style="background:var(--s);border:1px solid var(--bd);border-radius:16px;width:100%;max-width:700px;max-height:95vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="mhdr" style="position:relative;">
+      <div>
+        <div class="m-title">FOTO DO PEDIDO</div>
+        <div class="m-sub" id="IMG-sub"></div>
+      </div>
+      <button class="xbtn" id="IMG-close">×</button>
+    </div>
+    <div style="padding:1rem;overflow-y:auto;text-align:center;">
+      <img id="IMG-foto" src="" style="max-width:100%;max-height:70vh;border-radius:8px;border:1px solid var(--bd);object-fit:contain;">
     </div>
   </div>
 </div>
@@ -594,13 +681,85 @@ input[type=number] { font-family: var(--fm); }
           <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🔧 Função</div><input type="text" id="PF-func" placeholder="Ex: Pedreiro, Servente..."></div>
         </div>
         <div class="frow">
-          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📅 Data do Pagamento</div><input type="date" id="PF-data"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📅 Dias Trabalhados</div><input type="number" id="PF-data" placeholder="Ex: 5" min="1" step="1"></div>
           <div class="fg" style="margin-bottom:.75rem;"><div class="fl">💰 Valor Pago (R$)</div><input type="number" id="PF-valor" placeholder="0,00" min="0" step="0.01"></div>
+        </div>
+        <!-- FORMA DE PAGAMENTO -->
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div class="fl">💳 Forma de Pagamento</div>
+          <div style="display:flex;gap:.5rem;">
+            <button type="button" id="PF-pix" onclick="setPFPag('pix')" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:var(--fb);font-size:.85rem;cursor:pointer;transition:all .2s;">📱 Pix</button>
+            <button type="button" id="PF-din" onclick="setPFPag('dinheiro')" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:var(--fb);font-size:.85rem;cursor:pointer;transition:all .2s;">💵 Dinheiro</button>
+          </div>
+          <input type="hidden" id="PF-pagforma" value="">
+        </div>
+        <!-- FOTO COMPROVANTE -->
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div id="PF-foto-preview" style="display:none;margin-bottom:.5rem;position:relative;">
+            <img id="PF-foto-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--bd);max-height:180px;object-fit:cover;">
+            <button onclick="removePFFoto()" style="position:absolute;top:.4rem;right:.4rem;background:var(--dn);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.9rem;line-height:1;">×</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.75rem;background:var(--s2);border:1px dashed var(--bd);border-radius:8px;padding:.75rem 1rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--a2)'" onmouseout="this.style.borderColor='var(--bd)'">
+            <span style="font-size:1.4rem;">🧾</span>
+            <div>
+              <div style="font-size:.8rem;color:var(--tx);font-weight:600;" id="PF-foto-lbl">Foto do comprovante</div>
+              <div style="font-size:.65rem;color:var(--mu);font-family:var(--fm);margin-top:2px;">Pix, recibo, comprovante de pagamento...</div>
+            </div>
+            <input type="file" id="PF-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewPFFoto(this)">
+          </label>
         </div>
         <button class="btn btn-p" style="width:100%;background:var(--a2);color:#000;" id="PF-add">➕ Registrar Pagamento</button>
       </div>
       <div class="sec-t">Pagamentos registrados</div>
       <div id="PF-list" style="display:flex;flex-direction:column;gap:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR PAGAMENTO MODAL -->
+<div class="backdrop" id="BD-pf-edit">
+  <div class="pfbox">
+    <div class="mhdr" style="position:relative;">
+      <div>
+        <div class="m-title">EDITAR PAGAMENTO</div>
+        <div class="m-sub" id="PFE-sub"></div>
+      </div>
+      <button class="xbtn" id="PFE-close">×</button>
+    </div>
+    <div class="mbody">
+      <div class="pf-form">
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">👷 Nome</div><input type="text" id="PFE-nome" placeholder="Nome do funcionário"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">🔧 Função</div><input type="text" id="PFE-func" placeholder="Ex: Pedreiro, Servente..."></div>
+        </div>
+        <div class="frow">
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">📅 Dias Trabalhados</div><input type="number" id="PFE-data" placeholder="Ex: 5" min="1" step="1"></div>
+          <div class="fg" style="margin-bottom:.75rem;"><div class="fl">💰 Valor Pago (R$)</div><input type="number" id="PFE-valor" placeholder="0,00" min="0" step="0.01"></div>
+        </div>
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div class="fl">💳 Forma de Pagamento</div>
+          <div style="display:flex;gap:.5rem;">
+            <button type="button" id="PFE-pix" onclick="setPFEPag('pix')" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:var(--fb);font-size:.85rem;cursor:pointer;transition:all .2s;">📱 Pix</button>
+            <button type="button" id="PFE-din" onclick="setPFEPag('dinheiro')" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);font-family:var(--fb);font-size:.85rem;cursor:pointer;transition:all .2s;">💵 Dinheiro</button>
+          </div>
+          <input type="hidden" id="PFE-pagforma" value="">
+        </div>
+        <div class="fg" style="margin-bottom:.75rem;">
+          <div id="PFE-foto-preview" style="display:none;margin-bottom:.5rem;position:relative;">
+            <img id="PFE-foto-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--bd);max-height:180px;object-fit:cover;">
+            <button onclick="removePFEFoto()" style="position:absolute;top:.4rem;right:.4rem;background:var(--dn);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.9rem;line-height:1;">×</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.75rem;background:var(--s2);border:1px dashed var(--bd);border-radius:8px;padding:.75rem 1rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--a2)'" onmouseout="this.style.borderColor='var(--bd)'">
+            <span style="font-size:1.4rem;">🧾</span>
+            <div>
+              <div style="font-size:.8rem;color:var(--tx);font-weight:600;" id="PFE-foto-lbl">Foto do comprovante</div>
+              <div style="font-size:.65rem;color:var(--mu);font-family:var(--fm);margin-top:2px;">Pix, recibo, comprovante...</div>
+            </div>
+            <input type="file" id="PFE-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewPFEFoto(this)">
+          </label>
+        </div>
+        <button class="btn btn-p" style="width:100%;background:var(--a2);color:#000;" id="PFE-save">💾 Salvar Alterações</button>
+      </div>
     </div>
   </div>
 </div>
@@ -895,7 +1054,6 @@ function renderGrid() {
         : '<div class="hist-totals">' +
             '<div class="hist-total"><div class="hist-total-lbl">💰 Total gasto</div><div class="hist-total-val">'+fmtMoney(hct.total)+'</div></div>' +
             '<div class="hist-total"><div class="hist-total-lbl">🛒 Compras</div><div class="hist-total-val">'+hct.count+'</div></div>' +
-            '<div class="hist-total"><div class="hist-total-lbl">📦 Itens</div><div class="hist-total-val">'+hct.qty+'</div></div>' +
           '</div>');
 
     (function(sid){
@@ -1165,7 +1323,6 @@ function openHC(id) {
   var today = new Date().toISOString().split('T')[0];
   document.getElementById('HC-data').value = today;
   document.getElementById('HC-nome').value = '';
-  document.getElementById('HC-nome').value = '';
   document.getElementById('HC-marca').value = '';
   document.getElementById('HC-forn').value = '';
   document.getElementById('HC-vunit').value = '';
@@ -1173,8 +1330,8 @@ function openHC(id) {
   document.getElementById('HC-frete').value = '';
   document.getElementById('HC-total-calc').textContent = 'R$ 0,00';
   document.getElementById('HC-qty').value = '';
-  
   document.getElementById('HC-itens').value = '';
+  removeHCFoto();
   renderHCList();
   openBD('BD-hc');
 }
@@ -1188,7 +1345,6 @@ function renderHCList() {
 
   document.getElementById('HC-total-val').textContent   = fmtMoney(totals.total);
   document.getElementById('HC-total-count').textContent = totals.count;
-  document.getElementById('HC-total-qty').textContent   = totals.qty;
 
   var el = document.getElementById('HC-list');
   if (!list.length) {
@@ -1213,6 +1369,8 @@ function renderHCList() {
         '</div>' +
         '<div style="display:flex;align-items:center;gap:.5rem;">' +
           '<div class="pr-value">'+fmtMoney(parseFloat(p.valor)||0)+'</div>' +
+          '<button class="pr-edit" onclick="editHC('+p.id+')" title="Editar">✏️</button>' +
+          '<button class="pr-edit" onclick="viewHCFoto('+p.id+')" title="Ver foto" style="'+(p.foto?'border-color:var(--a3);color:var(--a3);':'opacity:.4;')+'">🖼️</button>' +
           '<button class="pr-del" onclick="delHC('+p.id+')">×</button>' +
         '</div>' +
       '</div>' +
@@ -1253,7 +1411,8 @@ document.getElementById('HC-add').onclick = async function() {
     desc:  desc,
     frete: frete,
     valor: total,
-    itens: document.getElementById('HC-itens').value.trim()
+    itens: document.getElementById('HC-itens').value.trim(),
+    foto:  document.getElementById('HC-foto-preview').style.display !== 'none' ? document.getElementById('HC-foto-img').src : null
   };
   if (!HC[HC_SID]) HC[HC_SID] = [];
   HC[HC_SID].push(item);
@@ -1269,6 +1428,7 @@ document.getElementById('HC-add').onclick = async function() {
   document.getElementById('HC-frete').value = '';
   document.getElementById('HC-total-calc').textContent = 'R$ 0,00';
   document.getElementById('HC-itens').value = '';
+  removeHCFoto();
   renderHCList();
   renderGrid();
   toast('Compra registrada!');
@@ -1288,14 +1448,65 @@ async function delHC(id) {
 // ---- PAGAMENTO FUNCIONÁRIOS ----
 var PF_SID = null;
 
+function setPFPag(tipo) {
+  document.getElementById('PF-pagforma').value = tipo;
+  var pix = document.getElementById('PF-pix');
+  var din = document.getElementById('PF-din');
+  if (tipo === 'pix') {
+    pix.style.background = 'rgba(59,130,246,.15)'; pix.style.borderColor = 'var(--a3)'; pix.style.color = 'var(--a3)';
+    din.style.background = 'transparent'; din.style.borderColor = 'var(--bd)'; din.style.color = 'var(--mu)';
+  } else {
+    din.style.background = 'rgba(16,185,129,.15)'; din.style.borderColor = 'var(--a2)'; din.style.color = 'var(--a2)';
+    pix.style.background = 'transparent'; pix.style.borderColor = 'var(--bd)'; pix.style.color = 'var(--mu)';
+  }
+}
+
+function resetPFPag() {
+  document.getElementById('PF-pagforma').value = '';
+  ['PF-pix','PF-din'].forEach(function(id){
+    var b = document.getElementById(id);
+    b.style.background = 'transparent'; b.style.borderColor = 'var(--bd)'; b.style.color = 'var(--mu)';
+  });
+}
+
+function previewPFFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('PF-foto-img').src = e.target.result;
+    document.getElementById('PF-foto-preview').style.display = 'block';
+    document.getElementById('PF-foto-lbl').textContent = 'Comprovante adicionado — clique para trocar';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removePFFoto() {
+  document.getElementById('PF-foto-img').src = '';
+  document.getElementById('PF-foto-preview').style.display = 'none';
+  document.getElementById('PF-foto-lbl').textContent = 'Foto do comprovante';
+  document.getElementById('PF-foto-input').value = '';
+}
+
+function viewPFFoto(id) {
+  if (!PF_SID) return;
+  var list = PF[PF_SID] || [];
+  var p = list.filter(function(x){ return x.id === id; })[0];
+  if (!p || !p.foto) { toast('Nenhum comprovante cadastrado.'); return; }
+  document.getElementById('IMG-sub').textContent = (p.nome||'Funcionário') + (p.pagforma ? ' — '+( p.pagforma==='pix'?'📱 Pix':'💵 Dinheiro') : '');
+  document.getElementById('IMG-foto').src = p.foto;
+  openBD('BD-img-view');
+}
+
 function openPF(id) {
   PF_SID = id;
   var s = STAGES.filter(function(x){return x.id===id;})[0];
   document.getElementById('PF-sub').textContent = 'ETAPA '+String(id).padStart(2,'0')+' — '+s.name.toUpperCase();
-  document.getElementById('PF-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('PF-data').value = '';
   document.getElementById('PF-nome').value  = '';
   document.getElementById('PF-func').value  = '';
   document.getElementById('PF-valor').value = '';
+  resetPFPag();
+  removePFFoto();
   renderPFList();
   openBD('BD-pf');
 }
@@ -1314,18 +1525,20 @@ function renderPFList() {
     el.innerHTML = '<div style="color:var(--mu);font-family:var(--fm);font-size:.8rem;text-align:center;padding:1.5rem;">Nenhum pagamento registrado ainda.</div>';
     return;
   }
-  var sorted = list.slice().sort(function(a,b){ return (b.data||'').localeCompare(a.data||''); });
+  var sorted = list.slice().sort(function(a,b){ return (parseInt(b.data)||0) - (parseInt(a.data)||0); });
   el.innerHTML = sorted.map(function(p) {
-    var dateStr = p.data ? new Date(p.data+'T12:00:00').toLocaleDateString('pt-BR') : '—';
     return '<div class="payment-row">' +
       '<div class="pay-top">' +
         '<div>' +
           '<div class="pay-name">👷 '+(p.nome||'Funcionário')+'</div>' +
           (p.func ? '<div class="pay-func">🔧 '+p.func+'</div>' : '') +
-          '<div class="pay-date">📅 '+dateStr+'</div>' +
+          '<div class="pay-date">📅 '+(p.data ? p.data+' dia'+(parseInt(p.data)>1?'s':'')+' trabalhado'+(parseInt(p.data)>1?'s':'') : '—')+'</div>' +
+          (p.pagforma ? '<div style="font-size:.65rem;font-family:var(--fm);margin-top:.15rem;color:'+(p.pagforma==='pix'?'var(--a3)':'var(--a2)')+';">'+(p.pagforma==='pix'?'📱 Pix':'💵 Dinheiro')+'</div>' : '') +
         '</div>' +
-        '<div style="display:flex;align-items:center;gap:.5rem;">' +
+        '<div style="display:flex;align-items:center;gap:.4rem;">' +
           '<div class="pay-value">'+fmtMoney(parseFloat(p.valor)||0)+'</div>' +
+          '<button class="pr-edit" onclick="editPF('+p.id+')" title="Editar">✏️</button>' +
+          '<button class="pr-edit" onclick="viewPFFoto('+p.id+')" title="Ver comprovante" style="'+(p.foto?'border-color:var(--a2);color:var(--a2);':'opacity:.4;')+'">🧾</button>' +
           '<button class="pay-del" onclick="delPF('+p.id+')">×</button>' +
         '</div>' +
       '</div>' +
@@ -1339,15 +1552,16 @@ document.getElementById('BD-pf').onclick = function(e){ if(e.target===this) clos
 document.getElementById('PF-add').onclick = async function() {
   if (!PF_SID) return;
   var item = {
-    id:    Date.now(),
-    data:  document.getElementById('PF-data').value,
-    nome:  document.getElementById('PF-nome').value.trim(),
-    func:  document.getElementById('PF-func').value.trim(),
-    valor: parseFloat(document.getElementById('PF-valor').value) || 0
+    id:       Date.now(),
+    data:     document.getElementById('PF-data').value,
+    nome:     document.getElementById('PF-nome').value.trim(),
+    func:     document.getElementById('PF-func').value.trim(),
+    valor:    parseFloat(document.getElementById('PF-valor').value) || 0,
+    pagforma: document.getElementById('PF-pagforma').value,
+    foto:     document.getElementById('PF-foto-preview').style.display !== 'none' ? document.getElementById('PF-foto-img').src : null
   };
   if (!PF[PF_SID]) PF[PF_SID] = [];
   PF[PF_SID].push(item);
-  // Salva junto com os dados da etapa em obra_stages
   if (!SD[PF_SID]) SD[PF_SID] = getSD(PF_SID);
   SD[PF_SID]._pf = PF[PF_SID];
   SAVING = true;
@@ -1356,6 +1570,9 @@ document.getElementById('PF-add').onclick = async function() {
   document.getElementById('PF-nome').value  = '';
   document.getElementById('PF-func').value  = '';
   document.getElementById('PF-valor').value = '';
+  document.getElementById('PF-data').value  = '';
+  resetPFPag();
+  removePFFoto();
   renderPFList();
   renderGrid();
   toast('Pagamento registrado!');
@@ -1374,10 +1591,232 @@ async function delPF(id) {
   renderGrid();
 }
 
+function previewHCFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('HC-foto-img').src = e.target.result;
+    document.getElementById('HC-foto-preview').style.display = 'block';
+    document.getElementById('HC-foto-lbl').textContent = 'Foto adicionada — clique para trocar';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeHCFoto() {
+  document.getElementById('HC-foto-img').src = '';
+  document.getElementById('HC-foto-preview').style.display = 'none';
+  document.getElementById('HC-foto-lbl').textContent = 'Tirar foto ou importar imagem';
+  document.getElementById('HC-foto-input').value = '';
+}
+
+function previewHCEFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('HCE-foto-img').src = e.target.result;
+    document.getElementById('HCE-foto-preview').style.display = 'block';
+    document.getElementById('HCE-foto-lbl').textContent = 'Trocar foto';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeHCEFoto() {
+  document.getElementById('HCE-foto-img').src = '';
+  document.getElementById('HCE-foto-preview').style.display = 'none';
+  document.getElementById('HCE-foto-lbl').textContent = 'Clique para adicionar foto ou tirar uma';
+  document.getElementById('HCE-foto-input').value = '';
+}
+
+function viewHCFoto(id) {
+  if (!HC_SID) return;
+  var list = HC[HC_SID] || [];
+  var p = list.filter(function(x){ return x.id === id; })[0];
+  if (!p || !p.foto) { toast('Nenhuma foto cadastrada para esta compra.'); return; }
+  var nome = p.nome || 'Compra';
+  document.getElementById('IMG-sub').textContent = nome + (p.forn ? ' — '+p.forn : '');
+  document.getElementById('IMG-foto').src = p.foto;
+  openBD('BD-img-view');
+}
+
+document.getElementById('IMG-close').onclick = function(){ closeBD('BD-img-view'); };
+document.getElementById('BD-img-view').onclick = function(e){ if(e.target===this) closeBD('BD-img-view'); };
+
+// ---- EDITAR COMPRA ----
+var HC_EDIT_ID = null;
+
+function editHC(id) {
+  if (!HC_SID) return;
+  var list = HC[HC_SID] || [];
+  var p = list.filter(function(x){ return x.id === id; })[0];
+  if (!p) return;
+  HC_EDIT_ID = id;
+  var s = STAGES.filter(function(x){ return x.id === HC_SID; })[0];
+  document.getElementById('HCE-sub').textContent = 'ETAPA '+String(HC_SID).padStart(2,'0')+' — '+s.name.toUpperCase();
+  document.getElementById('HCE-data').value  = p.data  || '';
+  document.getElementById('HCE-forn').value  = p.forn  || '';
+  document.getElementById('HCE-nome').value  = p.nome  || '';
+  document.getElementById('HCE-marca').value = p.marca || '';
+  document.getElementById('HCE-qty').value   = p.qty   || '';
+  document.getElementById('HCE-vunit').value = p.vunit || '';
+  document.getElementById('HCE-desc').value  = p.desc  || '';
+  document.getElementById('HCE-frete').value = p.frete || '';
+  document.getElementById('HCE-itens').value = p.itens || '';
+  document.getElementById('HCE-total-calc').textContent = fmtMoney(parseFloat(p.valor)||0);
+  // Foto
+  document.getElementById('HCE-foto-input').value = '';
+  if (p.foto) {
+    document.getElementById('HCE-foto-img').src = p.foto;
+    document.getElementById('HCE-foto-preview').style.display = 'block';
+    document.getElementById('HCE-foto-lbl').textContent = 'Trocar foto';
+  } else {
+    document.getElementById('HCE-foto-preview').style.display = 'none';
+    document.getElementById('HCE-foto-lbl').textContent = 'Clique para adicionar foto ou tirar uma';
+  }
+  openBD('BD-hc-edit');
+}
+
+function calcHCEditTotal() {
+  var qty   = parseFloat(document.getElementById('HCE-qty').value)   || 0;
+  var vunit = parseFloat(document.getElementById('HCE-vunit').value) || 0;
+  var desc  = parseFloat(document.getElementById('HCE-desc').value)  || 0;
+  var frete = parseFloat(document.getElementById('HCE-frete').value) || 0;
+  var total = Math.max(0, (qty * vunit) - desc + frete);
+  document.getElementById('HCE-total-calc').textContent = fmtMoney(total);
+}
+
+document.getElementById('HCE-close').onclick = function(){ closeBD('BD-hc-edit'); HC_EDIT_ID = null; };
+document.getElementById('BD-hc-edit').onclick = function(e){ if(e.target===this){ closeBD('BD-hc-edit'); HC_EDIT_ID = null; } };
+
+document.getElementById('HCE-save').onclick = async function() {
+  if (!HC_SID || !HC_EDIT_ID) return;
+  var qty   = parseInt(document.getElementById('HCE-qty').value)    || 0;
+  var vunit = parseFloat(document.getElementById('HCE-vunit').value) || 0;
+  var desc  = parseFloat(document.getElementById('HCE-desc').value)  || 0;
+  var frete = parseFloat(document.getElementById('HCE-frete').value) || 0;
+  var total = Math.max(0, (qty * vunit) - desc + frete);
+  var list  = HC[HC_SID] || [];
+  var idx   = list.findIndex(function(x){ return x.id === HC_EDIT_ID; });
+  if (idx < 0) return;
+  var updated = {
+    id:    HC_EDIT_ID,
+    data:  document.getElementById('HCE-data').value,
+    forn:  document.getElementById('HCE-forn').value.trim(),
+    nome:  document.getElementById('HCE-nome').value.trim(),
+    marca: document.getElementById('HCE-marca').value.trim(),
+    qty:   qty, vunit: vunit, desc: desc, frete: frete, valor: total,
+    itens: document.getElementById('HCE-itens').value.trim(),
+    foto:  document.getElementById('HCE-foto-img').src && document.getElementById('HCE-foto-preview').style.display !== 'none' ? document.getElementById('HCE-foto-img').src : null
+  };
+  HC[HC_SID][idx] = updated;
+  SAVING = true;
+  await sb.from('obra_hc').upsert({id: HC_EDIT_ID, stage_id: HC_SID, data: updated});
+  SAVING = false;
+  closeBD('BD-hc-edit');
+  HC_EDIT_ID = null;
+  renderHCList();
+  renderGrid();
+  toast('Compra atualizada!');
+};
+
+// ---- EDITAR PAGAMENTO ----
+var PF_EDIT_ID = null;
+
+function setPFEPag(tipo) {
+  document.getElementById('PFE-pagforma').value = tipo;
+  var pix = document.getElementById('PFE-pix');
+  var din = document.getElementById('PFE-din');
+  if (tipo === 'pix') {
+    pix.style.background='rgba(59,130,246,.15)'; pix.style.borderColor='var(--a3)'; pix.style.color='var(--a3)';
+    din.style.background='transparent'; din.style.borderColor='var(--bd)'; din.style.color='var(--mu)';
+  } else {
+    din.style.background='rgba(16,185,129,.15)'; din.style.borderColor='var(--a2)'; din.style.color='var(--a2)';
+    pix.style.background='transparent'; pix.style.borderColor='var(--bd)'; pix.style.color='var(--mu)';
+  }
+}
+
+function previewPFEFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('PFE-foto-img').src = e.target.result;
+    document.getElementById('PFE-foto-preview').style.display = 'block';
+    document.getElementById('PFE-foto-lbl').textContent = 'Comprovante adicionado — clique para trocar';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removePFEFoto() {
+  document.getElementById('PFE-foto-img').src = '';
+  document.getElementById('PFE-foto-preview').style.display = 'none';
+  document.getElementById('PFE-foto-lbl').textContent = 'Foto do comprovante';
+  document.getElementById('PFE-foto-input').value = '';
+}
+
+function editPF(id) {
+  if (!PF_SID) return;
+  var list = PF[PF_SID] || [];
+  var p = list.filter(function(x){ return x.id === id; })[0];
+  if (!p) return;
+  PF_EDIT_ID = id;
+  var s = STAGES.filter(function(x){ return x.id === PF_SID; })[0];
+  document.getElementById('PFE-sub').textContent = 'ETAPA '+String(PF_SID).padStart(2,'0')+' — '+s.name.toUpperCase();
+  document.getElementById('PFE-nome').value  = p.nome  || '';
+  document.getElementById('PFE-func').value  = p.func  || '';
+  document.getElementById('PFE-data').value  = p.data  || '';
+  document.getElementById('PFE-valor').value = p.valor || '';
+  document.getElementById('PFE-pagforma').value = p.pagforma || '';
+  // Reset form state
+  ['PFE-pix','PFE-din'].forEach(function(bid){
+    var b = document.getElementById(bid);
+    b.style.background='transparent'; b.style.borderColor='var(--bd)'; b.style.color='var(--mu)';
+  });
+  if (p.pagforma) setPFEPag(p.pagforma);
+  // Foto
+  document.getElementById('PFE-foto-input').value = '';
+  if (p.foto) {
+    document.getElementById('PFE-foto-img').src = p.foto;
+    document.getElementById('PFE-foto-preview').style.display = 'block';
+    document.getElementById('PFE-foto-lbl').textContent = 'Trocar comprovante';
+  } else {
+    removePFEFoto();
+  }
+  openBD('BD-pf-edit');
+}
+
+document.getElementById('PFE-close').onclick = function(){ closeBD('BD-pf-edit'); PF_EDIT_ID = null; };
+document.getElementById('BD-pf-edit').onclick = function(e){ if(e.target===this){ closeBD('BD-pf-edit'); PF_EDIT_ID = null; } };
+
+document.getElementById('PFE-save').onclick = async function() {
+  if (!PF_SID || !PF_EDIT_ID) return;
+  var list = PF[PF_SID] || [];
+  var idx  = list.findIndex(function(x){ return x.id === PF_EDIT_ID; });
+  if (idx < 0) return;
+  var updated = {
+    id:       PF_EDIT_ID,
+    data:     document.getElementById('PFE-data').value,
+    nome:     document.getElementById('PFE-nome').value.trim(),
+    func:     document.getElementById('PFE-func').value.trim(),
+    valor:    parseFloat(document.getElementById('PFE-valor').value) || 0,
+    pagforma: document.getElementById('PFE-pagforma').value,
+    foto:     document.getElementById('PFE-foto-preview').style.display !== 'none' ? document.getElementById('PFE-foto-img').src : null
+  };
+  PF[PF_SID][idx] = updated;
+  if (!SD[PF_SID]) SD[PF_SID] = getSD(PF_SID);
+  SD[PF_SID]._pf = PF[PF_SID];
+  SAVING = true;
+  await sb.from('obra_stages').upsert({id: parseInt(PF_SID), data: SD[PF_SID]});
+  SAVING = false;
+  closeBD('BD-pf-edit');
+  PF_EDIT_ID = null;
+  renderPFList();
+  renderGrid();
+  toast('Pagamento atualizado!');
+};
+
 // ESC
 document.addEventListener('keydown', function(e){
   if (e.key!=='Escape') return;
-  ['BD-ch','BD-st','BD-sp','BD-mgr','BD-obra','BD-hc','BD-pf'].forEach(closeBD);
+  ['BD-ch','BD-st','BD-sp','BD-mgr','BD-obra','BD-hc','BD-pf','BD-hc-edit','BD-img-view','BD-pf-edit'].forEach(closeBD);
   document.body.style.overflow='';
 });
 
